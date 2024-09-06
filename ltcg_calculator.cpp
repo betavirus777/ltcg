@@ -25,15 +25,6 @@ private:
         return std::round(value * 100.0) / 100.0;
     }
 
-    double getInflationRate(int year) const {
-        auto it = std::find_if(rates.begin(), rates.end(),
-                               [year](const YearlyRates& r) { return r.year == year; });
-        if (it != rates.end()) {
-            return it->inflation;
-        }
-        throw std::runtime_error("No inflation data available for year " + std::to_string(year));
-    }
-
 public:
     void loadRatesFromFile(const std::string& filename) {
         std::ifstream file(filename);
@@ -65,7 +56,7 @@ public:
     }
 
     double calculateSellingPrice(int buyYear, int sellYear, double initialPrice) const {
-        if (buyYear < 2002 || sellYear > 2030 || buyYear >= sellYear) {
+        if (buyYear < 2001 || sellYear > 2030 || buyYear >= sellYear) {
             throw std::invalid_argument("Invalid buy or sell year");
         }
 
@@ -84,15 +75,17 @@ public:
         return roundToTwoDecimals(price);
     }
 
-    double calculateLTCG(double buyPrice, double sellPrice, int buyYear, int sellYear) const {
-        double indexedCost = buyPrice;
-        for (int year = buyYear; year < sellYear; ++year) {
-            double inflationRate = getInflationRate(year);
-            indexedCost *= (1 + inflationRate / 100.0);
-        }
+    double calculateLTCG(double buyPrice, double sellPrice, int holdingYears) const {
+        double indexedCost = buyPrice * std::pow(1.06, holdingYears);
         double profit = sellPrice - indexedCost;
         std::cout << "Buy price: " << buyPrice << ", Indexed cost: " << indexedCost << ", Sell price: " << sellPrice << ", Profit: " << profit << std::endl;
         return profit > 0 ? roundToTwoDecimals(profit * 0.20) : 0.0;
+    }
+
+    double calculateNewLTCG(double buyPrice, double sellPrice) const {
+        double profit = sellPrice - buyPrice;
+        std::cout << "Buy price: " << buyPrice << ", Sell price: " << sellPrice << ", Profit: " << profit << std::endl;
+        return profit > 0 ? roundToTwoDecimals(profit * 0.125) : 0.0;
     }
 };
 
@@ -106,19 +99,19 @@ int main() {
         double initialPrice;
 
         while (true) {
-            std::cout << "Enter the year of purchase (2002-2030): ";
-            if (!(std::cin >> buyYear) || buyYear < 2002 || buyYear > 2030) {
+            std::cout << "Enter the year of purchase (2010-2030): ";
+            if (!(std::cin >> buyYear) || buyYear < 2010 || buyYear > 2030) {
                 std::cin.clear();
                 std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-                std::cout << "Invalid input. Please enter a year between 2002 and 2030.\n";
+                std::cout << "Invalid input. Please enter a year between 2010 and 2030.\n";
                 continue;
             }
             break;
         }
 
         while (true) {
-            std::cout << "Enter the year of selling (2002-2030): ";
-            if (!(std::cin >> sellYear) || sellYear < 2002 || sellYear > 2030 || sellYear <= buyYear) {
+            std::cout << "Enter the year of selling (2010-2030): ";
+            if (!(std::cin >> sellYear) || sellYear < 2010 || sellYear > 2030 || sellYear <= buyYear) {
                 std::cin.clear();
                 std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
                 std::cout << "Invalid input. Please enter a year between " << (buyYear + 1) << " and 2030.\n";
@@ -139,11 +132,22 @@ int main() {
         }
 
         double sellingPrice = calculator.calculateSellingPrice(buyYear, sellYear, initialPrice);
-        double ltcg = calculator.calculateLTCG(initialPrice, sellingPrice, buyYear, sellYear);
+        double ltcg = calculator.calculateLTCG(initialPrice, sellingPrice, sellYear - buyYear);
+        double newLtcg = calculator.calculateNewLTCG(initialPrice, sellingPrice);
 
         std::cout << std::fixed << std::setprecision(2);
         std::cout << "Estimated selling price: Rs. " << sellingPrice << " lakhs" << std::endl;
-        std::cout << "LTCG (with indexation): Rs. " << ltcg << " lakhs" << std::endl;
+        std::cout << "LTCG (old scheme): Rs. " << ltcg << " lakhs" << std::endl;
+        std::cout << "LTCG (new scheme): Rs. " << newLtcg << " lakhs" << std::endl;
+        std::cout << "Difference: Rs. " << std::abs(ltcg - newLtcg) << " lakhs" << std::endl;
+
+        if (ltcg > newLtcg) {
+            std::cout << "The old taxation scheme leads to higher taxes." << std::endl;
+        } else if (newLtcg > ltcg) {
+            std::cout << "The new taxation scheme leads to higher taxes." << std::endl;
+        } else {
+            std::cout << "Both taxation schemes result in the same tax amount." << std::endl;
+        }
     }
     catch (const std::exception& e) {
         std::cerr << "Error: " << e.what() << std::endl;
