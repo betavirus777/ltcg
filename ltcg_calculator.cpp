@@ -99,19 +99,19 @@ int main() {
         double initialPrice;
 
         while (true) {
-            std::cout << "Enter the year of purchase (2010-2030): ";
-            if (!(std::cin >> buyYear) || buyYear < 2010 || buyYear > 2030) {
+            std::cout << "Enter the year of purchase (2002-2030): ";
+            if (!(std::cin >> buyYear) || buyYear < 2002 || buyYear > 2030) {
                 std::cin.clear();
                 std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-                std::cout << "Invalid input. Please enter a year between 2010 and 2030.\n";
+                std::cout << "Invalid input. Please enter a year between 2002 and 2030.\n";
                 continue;
             }
             break;
         }
 
         while (true) {
-            std::cout << "Enter the year of selling (2010-2030): ";
-            if (!(std::cin >> sellYear) || sellYear < 2010 || sellYear > 2030 || sellYear <= buyYear) {
+            std::cout << "Enter the year of selling (2002-2030): ";
+            if (!(std::cin >> sellYear) || sellYear < 2002 || sellYear > 2030 || sellYear <= buyYear) {
                 std::cin.clear();
                 std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
                 std::cout << "Invalid input. Please enter a year between " << (buyYear + 1) << " and 2030.\n";
