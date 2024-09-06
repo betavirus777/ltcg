@@ -81,12 +81,6 @@ public:
         std::cout << "Buy price: " << buyPrice << ", Indexed cost: " << indexedCost << ", Sell price: " << sellPrice << ", Profit: " << profit << std::endl;
         return profit > 0 ? roundToTwoDecimals(profit * 0.20) : 0.0;
     }
-
-    double calculateNewLTCG(double buyPrice, double sellPrice) const {
-        double profit = sellPrice - buyPrice;
-        std::cout << "Buy price: " << buyPrice << ", Sell price: " << sellPrice << ", Profit: " << profit << std::endl;
-        return profit > 0 ? roundToTwoDecimals(profit * 0.125) : 0.0;
-    }
 };
 
 int main() {
@@ -133,21 +127,11 @@ int main() {
 
         double sellingPrice = calculator.calculateSellingPrice(buyYear, sellYear, initialPrice);
         double ltcg = calculator.calculateLTCG(initialPrice, sellingPrice, sellYear - buyYear);
-        double newLtcg = calculator.calculateNewLTCG(initialPrice, sellingPrice);
+
 
         std::cout << std::fixed << std::setprecision(2);
         std::cout << "Estimated selling price: Rs. " << sellingPrice << " lakhs" << std::endl;
-        std::cout << "LTCG (old scheme): Rs. " << ltcg << " lakhs" << std::endl;
-        std::cout << "LTCG (new scheme): Rs. " << newLtcg << " lakhs" << std::endl;
-        std::cout << "Difference: Rs. " << std::abs(ltcg - newLtcg) << " lakhs" << std::endl;
-
-        if (ltcg > newLtcg) {
-            std::cout << "The old taxation scheme leads to higher taxes." << std::endl;
-        } else if (newLtcg > ltcg) {
-            std::cout << "The new taxation scheme leads to higher taxes." << std::endl;
-        } else {
-            std::cout << "Both taxation schemes result in the same tax amount." << std::endl;
-        }
+        std::cout << "LTCG (old scheme) with indexation: Rs. " << ltcg << " lakhs" << std::endl;
     }
     catch (const std::exception& e) {
         std::cerr << "Error: " << e.what() << std::endl;
